@@ -17,18 +17,27 @@ using System.Linq;
 
 public class Login : MonoBehaviour
 {
+    #region Variables
+
     [Header("Login Panels")]
     public InputField username;
-    public InputField email;
     public InputField password;
+    public GameObject incorrectUsername;
+    public GameObject incorrectPassword;
 
     [Header("Create Account Panels")]
     public InputField newUsername;
     public InputField newEmail;
     public InputField newPassword;
+    public GameObject usernameExists;
+
+    [Header("Forgot Password Panels")]
+    public InputField currentUsername;
+    public InputField passwordNew;
+    public InputField confirmPassword;
 
     [Header("Panels")]
-    public GameObject incorrectPassword;
+    public GameObject loggedInPanel;
     public GameObject login;
     public GameObject createAccount;
 
@@ -36,6 +45,8 @@ public class Login : MonoBehaviour
     public InputField sndEmail;
     public InputField sndUsername;
     public GameObject incorrectEmail;
+    
+    #endregion
 
     private void Start()
     {
@@ -44,14 +55,24 @@ public class Login : MonoBehaviour
 
     IEnumerator CreateUser(string username, string email, string password)
     {
-        string createUserURL = "http://localhost/nsirpg/insertuser.php";
+        string createUserURL = "http://localhost/nsirpg/InsertUser.php";
         WWWForm form = new WWWForm();
         form.AddField("username", username);
         form.AddField("email", email);
         form.AddField("password", password);
         UnityWebRequest webRequest = UnityWebRequest.Post(createUserURL, form);
         yield return webRequest.SendWebRequest();
-        Debug.Log(webRequest);
+        Debug.Log(webRequest.downloadHandler.text);
+        if(webRequest.downloadHandler.text == "Username Already Exists")
+        {
+            usernameExists.SetActive(true);
+        }
+
+        else if (webRequest.downloadHandler.text == "Success")
+        {
+            loggedInPanel.SetActive(true);
+            usernameExists.SetActive(false);
+        }
     }
 
     public void CreateNewUser()
@@ -59,38 +80,35 @@ public class Login : MonoBehaviour
         StartCoroutine(CreateUser(newUsername.text, newEmail.text, newPassword.text));
     }
 
-    IEnumerator LoginUser(string username, string email, string password)
+    IEnumerator LoginUser(string username, string password)
     {
-        string loginUserURL = "http://localhost/nsirpg/Login.php";
+        string loginUserURL = "http://localhost/nsirpg/UserLogin.php";
         WWWForm form = new WWWForm();
         form.AddField("username", username);
-        form.AddField("email", email);
         form.AddField("password", password);
         UnityWebRequest webRequest = UnityWebRequest.Post(loginUserURL, form);
         yield return webRequest.SendWebRequest();
         Debug.Log(webRequest.downloadHandler.text);
-        if (webRequest.downloadHandler.text == "Login Successful")
+        if (webRequest.downloadHandler.text == "Logged In")
         {
-            SceneManager.LoadScene(1);
+            loggedInPanel.SetActive(true);
         }
-        else if (webRequest.downloadHandler.text == "Incorrect Username")
+        else if (webRequest.downloadHandler.text == "User is Incorrect")
+        {
+            incorrectUsername.SetActive(true);
+        }
+        else if (webRequest.downloadHandler.text == "Incorrect Pasword")
         {
             incorrectPassword.SetActive(true);
-            login.SetActive(false);
-        }
-        else if (webRequest.downloadHandler.text == "Incorrect Password")
-        {
-            incorrectPassword.SetActive(true);
-            login.SetActive(false);
         }
     }
 
     public void LoginCurrentUser()
     {
-        StartCoroutine(LoginUser(username.text, email.text, password.text));
+        StartCoroutine(LoginUser(username.text, password.text));
     }
 
-    IEnumerator CheckEmail(string email)
+    IEnumerator CheckEmail(string email, string username)
     {
         string checkEmailURL = "http://localhost/nsirpg/CheckEmail.php";
         WWWForm form = new WWWForm();
@@ -104,6 +122,7 @@ public class Login : MonoBehaviour
         }
         else
         {
+            SendEmail(email, username);
         }
     }
 
@@ -132,6 +151,21 @@ public class Login : MonoBehaviour
 
     public void SendingEmail()
     {
-        SendEmail(sndEmail.text, sndUsername.text);
+        StartCoroutine(CheckEmail(sndEmail.text, sndUsername.text));
+    }
+
+    IEnumerator changePassword(string username, string newPassword, string confirmPassword)
+    {
+        string changePasswordURL = "http://localhost/nsirpg/UpdatePassword.php";
+        WWWForm form = new WWWForm();
+        form.AddField("username_Post", username);
+        form.AddField("password_Post", newPassword);
+        UnityWebRequest webRequest = UnityWebRequest.Post(changePasswordURL, form);
+        yield return webRequest.SendWebRequest();
+        Debug.Log(webRequest.downloadHandler.text);
+        if(webRequest.downloadHandler.text == "Password Changed")
+        {
+            loggedInPanel.SetActive(true);
+        }
     }
 }
