@@ -55,7 +55,7 @@ public class SystemManager : MonoBehaviour
     #region Create
     IEnumerator CreateUser(string username, string password, string email)
     {
-        string createUserURL = "http://localhost/127.0.0.1/nsirpg/insertuser.php";
+        string createUserURL = "http://localhost/nsripg/insertuser.php";
         WWWForm form = new WWWForm();
         form.AddField("username", username);
         form.AddField("password", password);
@@ -77,7 +77,7 @@ public class SystemManager : MonoBehaviour
     #region Login
     IEnumerator LoginUser(string username, string password)
     {
-        string loginUserURL = "http://localhost/127.0.0.1/nsirpg/Login.php";
+        string loginUserURL = "http://localhost/nsripg/Login.php";
         WWWForm form = new WWWForm();
         form.AddField("username", username);
         form.AddField("password", password);
@@ -104,7 +104,7 @@ public class SystemManager : MonoBehaviour
     #region ForgotPasscode
     IEnumerator ForgotPassword( InputField email)
     {
-        string ForgotURL = "http://localhost/127.0.0.1/nsirpg/Email.php";
+        string ForgotURL = "http://localhost/nsripg/Email.php";
        
         WWWForm form = new WWWForm();
         form.AddField("email_Post", email.text);
@@ -145,7 +145,7 @@ public class SystemManager : MonoBehaviour
         MailMessage mail = new MailMessage();
         mail.From = new MailAddress("sqlunityclasssydney@gmail.com");
         mail.To.Add(email.text);
-        mail.Subject = "NSIRPG Password Reset";
+        mail.Subject = "nsripg Password Reset";
         mail.Body = "Hello Bingus Boingus " + user + "\nReset using this code: " + code;
 
         //connect to google
@@ -175,13 +175,12 @@ public class SystemManager : MonoBehaviour
        //either make button that resends email or send them back to previous panel
     }
     
-   IEnumerator ConfirmPassword(InputField newPassword1, InputField username)
+   IEnumerator ConfirmPassword(InputField newPassword1)
     {
-        string confirmPasswordURL = "http://localhost/127.0.0.1/nsirpg/updatepassword.php";
+        string confirmPasswordURL = "http://localhost/nsripg/updatepassword.php";
         WWWForm form = new WWWForm();
 
         form.AddField("password_Post", newPassword1.text);
-        form.AddField("username_Post", username.text);
         UnityWebRequest webRequest = UnityWebRequest.Post(confirmPasswordURL, form);
         yield return webRequest.SendWebRequest();
         Debug.Log(webRequest.downloadHandler.text);
@@ -206,7 +205,7 @@ public class SystemManager : MonoBehaviour
     }
     public void ConfirmNewPassword( )
     {
-        StartCoroutine(ConfirmPassword(resetPassword,resetUsername));
+        StartCoroutine(ConfirmPassword(resetPassword));
     }
 
 
