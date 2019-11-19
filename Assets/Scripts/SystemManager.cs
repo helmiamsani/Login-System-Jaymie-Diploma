@@ -41,10 +41,34 @@ public class SystemManager : MonoBehaviour
     public InputField resetPassword;
     public InputField resetEmail;
     public InputField resetUsername;
-    [Header("Error Texts")]
-    public Text LoginError;
-    public Text createError;
+
+    [Header("Misc Texts")]
+    public LoginErrors[] login;
+    [Serializable]
+    public class LoginErrors
+    {
+        public Text usernameLgnTexts;
+        public Text passwordLgnTexts;
+    }
+
+    public CreateErrors[] createAccount;
+    [Serializable]
+    public class CreateErrors
+    {
+        public Text usernameCrtTexts;
+        public Text EmailCrtTexts;
+    }
+
+    public EmailCodes[] emailCode;
+    [Serializable]
+    public class EmailCodes
+    {
+        public Text emailCodeDescription;
+    }
+
     public Text resetError;
+
+
 
     public void Start()
     {
@@ -64,6 +88,16 @@ public class SystemManager : MonoBehaviour
         yield return webRequest.SendWebRequest();
        // serverText = webRequest.downloadHandler.text;
         Debug.Log(webRequest.downloadHandler.text);
+        if(webRequest.downloadHandler.text == "Username Already Exists")
+        {
+            createAccount[0].usernameCrtTexts.enabled = true;
+            createAccount[0].usernameCrtTexts.text = webRequest.downloadHandler.text;
+        }
+        else if(webRequest.downloadHandler.text == "Email Already Exists")
+        {
+            createAccount[0].EmailCrtTexts.enabled = true;
+            createAccount[0].EmailCrtTexts.text = webRequest.downloadHandler.text;
+        }
     }
 
     public void CreateNewUser()
@@ -84,23 +118,28 @@ public class SystemManager : MonoBehaviour
         UnityWebRequest webRequest = UnityWebRequest.Post(loginUserURL, form);
         yield return webRequest.SendWebRequest();
         Debug.Log(webRequest.downloadHandler.text);
-        serverText = webRequest.downloadHandler.text;        
+        if (webRequest.downloadHandler.text == "Login Successful")
+        {
+            SceneManager.LoadScene(1);
+        }
+        else if(webRequest.downloadHandler.text == "Incorrect Password")
+        {
+            login[0].passwordLgnTexts.enabled = true;
+            login[0].passwordLgnTexts.text = webRequest.downloadHandler.text;
+        }
+        else if(webRequest.downloadHandler.text == "Incorrect Username")
+        {
+            login[0].usernameLgnTexts.enabled = true;
+            login[0].usernameLgnTexts.text = webRequest.downloadHandler.text;
+        }
     }
     public void LoginUser()
     {
         StartCoroutine(LoginUser(loginUsername.text, loginPassword.text));
-        if (serverText == "Login Successful")
-        {
-            LoginError.enabled = false;
-            SceneManager.LoadScene(1);
-        }
-        if (serverText == "Incorrect Password")
-        {
-            LoginError.enabled = true;
-            LoginError.text = serverText;
-        }
+        
     }
     #endregion
+
     #region ForgotPasscode
     IEnumerator ForgotPassword( InputField email)
     {
@@ -122,6 +161,8 @@ public class SystemManager : MonoBehaviour
             resetError.enabled = false;
             user = webRequest.downloadHandler.text;
             SendEmail(email);
+            emailCode[0].emailCodeDescription.enabled = true;
+            emailCode[0].emailCodeDescription.text = "Code is sent to your email, " + resetEmail.text + ".";
         }
     }
     public void ForgotPassword()
@@ -137,8 +178,8 @@ public class SystemManager : MonoBehaviour
         }
     }
     #endregion
+
     #region Email
-  
     public void SendEmail(InputField email)
     {
        
