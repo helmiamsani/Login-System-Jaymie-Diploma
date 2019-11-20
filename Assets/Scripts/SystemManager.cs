@@ -24,6 +24,7 @@ public class SystemManager : MonoBehaviour
    
     public string serverText;
     [Header("Panels")]
+    public GameObject firstPanel;
     public GameObject loginPanel;
     public GameObject forgotPasswordPannel;
     public GameObject forgotpasswordemail;
@@ -57,23 +58,27 @@ public class SystemManager : MonoBehaviour
     {
         public Text usernameCrtTexts;
         public Text EmailCrtTexts;
+        public Text EmailWarning2;
     }
 
-    public EmailCodes[] emailCode;
+    public ResetPassword[] resetPasswords;
     [Serializable]
-    public class EmailCodes
+    public class ResetPassword
     {
-        public Text emailCodeDescription;
+        public Text mainWarning;
+        public Text emailCode;
     }
-
-    public Text resetError;
-
 
 
     public void Start()
     {
-      
-       
+        firstPanel.SetActive(true);
+        loginPanel.SetActive(false);
+        forgotPasswordPannel.SetActive(false);
+        forgotpasswordemail.SetActive(false);
+        emailCodePanel.SetActive(false);
+        newPasswordPanel.SetActive(false);
+        createUserPanel.SetActive(false);
     }
 
     #region Create
@@ -95,8 +100,15 @@ public class SystemManager : MonoBehaviour
         }
         else if(webRequest.downloadHandler.text == "Email Already Exists")
         {
+            createAccount[0].EmailWarning2.enabled = false;
             createAccount[0].EmailCrtTexts.enabled = true;
             createAccount[0].EmailCrtTexts.text = webRequest.downloadHandler.text;
+        }
+        else if(webRequest.downloadHandler.text == "Email is not exist")
+        {
+            createAccount[0].EmailCrtTexts.enabled = false;
+            createAccount[0].EmailWarning2.enabled = true;
+            createAccount[0].EmailWarning2.text = webRequest.downloadHandler.text;
         }
     }
 
@@ -108,6 +120,7 @@ public class SystemManager : MonoBehaviour
         email = createEmail.text;
     }
     #endregion
+
     #region Login
     IEnumerator LoginUser(string username, string password)
     {
@@ -151,31 +164,25 @@ public class SystemManager : MonoBehaviour
        
         yield return webRequest.SendWebRequest();
         Debug.Log(webRequest.downloadHandler.text);
-        if (webRequest.downloadHandler.text == "User Not Found")
+        if (webRequest.downloadHandler.text == "User cannot be found")
         {
-            resetError.enabled = true;
-            resetError.text = webRequest.downloadHandler.text;
+            resetPasswords[0].mainWarning.enabled = true;
+            resetPasswords[0].mainWarning.text = webRequest.downloadHandler.text;
         }
         else
         {
-            resetError.enabled = false;
+            resetPasswords[0].mainWarning.enabled = false;
             user = webRequest.downloadHandler.text;
             SendEmail(email);
-            emailCode[0].emailCodeDescription.enabled = true;
-            emailCode[0].emailCodeDescription.text = "Code is sent to your email, " + resetEmail.text + ".";
+            forgotpasswordemail.SetActive(false);
+            emailCodePanel.SetActive(true);
+            resetPasswords[0].emailCode.enabled = true;
+            resetPasswords[0].emailCode.text = "Code is sent to your email, " + resetEmail.text + ".";
         }
     }
     public void ForgotPassword()
     {
         StartCoroutine(ForgotPassword(resetEmail));
-        if (serverText == "Login Successful")
-        {
-            Debug.Log("you did it");
-        }
-        if (serverText == "Incorrect Password")
-        {
-            Debug.Log("you didn't it");
-        }
     }
     #endregion
 
@@ -187,7 +194,7 @@ public class SystemManager : MonoBehaviour
         mail.From = new MailAddress("sqlunityclasssydney@gmail.com");
         mail.To.Add(email.text);
         mail.Subject = "nsripg Password Reset";
-        mail.Body = "Hello Bingus Boingus " + user + "\nReset using this code: " + code;
+        mail.Body = "Hello Welcome to Game Account reset page " + user + "\nReset using this code: " + code;
 
         //connect to google
         SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
@@ -216,12 +223,13 @@ public class SystemManager : MonoBehaviour
        //either make button that resends email or send them back to previous panel
     }
     
-   IEnumerator ConfirmPassword(InputField newPassword1)
+   IEnumerator ConfirmPassword(InputField newPassword1, InputField username)
     {
         string confirmPasswordURL = "http://localhost/nsripg/updatepassword.php";
         WWWForm form = new WWWForm();
 
         form.AddField("password_Post", newPassword1.text);
+        form.AddField("username_Post", username.text);
         UnityWebRequest webRequest = UnityWebRequest.Post(confirmPasswordURL, form);
         yield return webRequest.SendWebRequest();
         Debug.Log(webRequest.downloadHandler.text);
@@ -246,7 +254,7 @@ public class SystemManager : MonoBehaviour
     }
     public void ConfirmNewPassword( )
     {
-        StartCoroutine(ConfirmPassword(resetPassword));
+        StartCoroutine(ConfirmPassword(resetPassword, resetUsername));
     }
 
 
